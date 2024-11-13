@@ -1,0 +1,55 @@
+version: 2.1
+orbs:
+  python: circleci/python@2.1.1
+
+workflows:
+  build-app-with-test:
+    jobs:
+      - build-and-test
+jobs:
+  build-and-test:
+    docker:
+      - image: cimg/python:3.9
+      - image: circleci/postgres:13.3
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: test_db
+          POSTGRES_PASSWORD: ""
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "requirements.txt" }}
+            - v1-dependencies-
+      - run:
+          name: Install dependencies
+          command: |
+            python -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+      - run:
+          name: Wait for DB
+          command: |
+            until pg_isready -h 127.0.0.1 -p 5432; do
+              echo "Waiting for database..."
+              sleep 1
+            done
+      - run:
+          name: Run migrations
+          command: |
+            . venv/bin/activate
+            python manage.py migrate
+      - run:
+          name: Run tests
+          command: |
+            . venv/bin/activate
+            pytest --junitxml=test-reports/results.xml
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+      - store_test_results:
+          path: test-reports
+      - save_cache:
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+          paths:
+            - ./venv
