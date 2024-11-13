@@ -9,6 +9,9 @@ workflows:
       - deploy:
           requires:
             - build-and-test
+          filters:
+            branches:
+              only: main
 
 jobs:
   build-and-test:
@@ -33,27 +36,10 @@ jobs:
             . venv/bin/activate
             pip install -r requirements.txt
       - run:
-          name: Wait for DB
-          command: |
-            until pg_isready -h 127.0.0.1 -p 5432; do
-              echo "Waiting for database..."
-              sleep 1
-            done
-      - run:
-          name: Run migrations
-          command: |
-            . venv/bin/activate
-            python manage.py migrate
-      - run:
           name: Run tests
           command: |
             . venv/bin/activate
-            python manage.py test invoices
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
-      - store_test_results:
-          path: test-reports
+            python manage.py test
       - save_cache:
           key: v1-dependencies-{{ checksum "requirements.txt" }}
           paths:
@@ -64,33 +50,17 @@ jobs:
       - image: cimg/python:3.10
     steps:
       - checkout
-      - setup_remote_docker
+      - add_ssh_keys:
+          fingerprints:
+            - "YOUR_SSH_KEY_FINGERPRINT"
       - run:
-          name: Install AWS CLI
+          name: Deploy to EC2
           command: |
-            sudo apt-get update
-            sudo apt-get install -y awscli
-      - run:
-          name: Install Elastic Beanstalk CLI
-          command: |
-            pip install awsebcli
-      - run:
-          name: Build Docker image
-          command: docker build -t invoice-management .
-      - run:
-          name: Deploy to AWS Elastic Beanstalk
-          command: |
-            # Configure AWS CLI
-            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-            aws configure set default.region $AWS_DEFAULT_REGION
-            # Initialize Elastic Beanstalk application
-            eb init -p docker invoice-management
-            # Check if environment exists, create if not
-            if eb status invoice-env; then
-              echo "Environment exists"
-            else
-              eb create invoice-env
-            fi
-            # Deploy application
-            eb deploy
+            echo "deploying to EC2..."
+            ssh -o StrictHostKeyChecking=no ubuntu@${EC2_PUBLIC_IP} "\
+              cd ~/invoice-project && \
+              git pull origin main && \
+              source venv/bin/activate && \
+              pip install -r requirements.txt && \
+              python manage.py migrate && \
+              sudo systemctl restart gunicorn"

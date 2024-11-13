@@ -1,0 +1,43 @@
+paths:
+  /invoices:
+    post:
+      summary: Create a new invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                invoice_number:
+                  type: string
+                  example: "INV001"
+                customer_name:
+                  type: string
+                  example: "John Doe"
+                date:
+                  type: string
+                  format: date
+                  example: "2024-11-12"
+                details:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      description:
+                        type: string
+                        example: "Product A"
+                      quantity:
+                        type: integer
+                        example: 2
+                      price:
+                        type: number
+                        format: float
+                        example: 50.00
+                      line_total:
+                        type: number
+                        format: float
+                        example: 100.00
+      responses:
+        '201':
+          description: Invoice created
