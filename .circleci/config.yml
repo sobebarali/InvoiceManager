@@ -84,7 +84,13 @@ jobs:
             aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
             aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
             aws configure set default.region $AWS_DEFAULT_REGION
-            # Deploy using Elastic Beanstalk CLI
+            # Initialize Elastic Beanstalk application
             eb init -p docker invoice-management
-            eb use invoice-env
+            # Check if environment exists, create if not
+            if eb status invoice-env; then
+              echo "Environment exists"
+            else
+              eb create invoice-env
+            fi
+            # Deploy application
             eb deploy
