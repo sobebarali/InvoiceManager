@@ -61,7 +61,7 @@ jobs:
 
   deploy:
     docker:
-      - image: circleci/python:3.10
+      - image: cimg/python:3.10
     steps:
       - checkout
       - setup_remote_docker
@@ -70,6 +70,10 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install -y awscli
+      - run:
+          name: Install Elastic Beanstalk CLI
+          command: |
+            pip install awsebcli
       - run:
           name: Build Docker image
           command: docker build -t invoice-management .
@@ -82,5 +86,5 @@ jobs:
             aws configure set default.region $AWS_DEFAULT_REGION
             # Deploy using Elastic Beanstalk CLI
             eb init -p docker invoice-management
-            eb create invoice-env
+            eb use invoice-env
             eb deploy
