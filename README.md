@@ -45,3 +45,15 @@
   python manage.py test invoices
   ```
 
+## Continuous Integration
+
+This project uses CircleCI for continuous integration. The configuration is located in .circleci/config.yml.
+
+- Python Version: 3.9
+- Database: PostgreSQL 13.3
+- Key Steps:
+  - Dependency installation
+  - Database migrations
+  - Running tests with pytest
+  - Caching for faster builds
+
