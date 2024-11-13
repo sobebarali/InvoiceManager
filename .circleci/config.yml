@@ -9,12 +9,13 @@ workflows:
 jobs:
   build-and-test:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10
       - image: circleci/postgres:13.3
         environment:
           POSTGRES_USER: postgres
           POSTGRES_DB: test_db
-          POSTGRES_PASSWORD: ""
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
     steps:
       - checkout
       - restore_cache:
