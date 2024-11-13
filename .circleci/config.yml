@@ -66,6 +66,11 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
+          name: Install AWS CLI
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y awscli
+      - run:
           name: Build Docker image
           command: docker build -t invoice-management .
       - run:
