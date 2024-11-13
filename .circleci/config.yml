@@ -44,7 +44,7 @@ jobs:
           name: Run tests
           command: |
             . venv/bin/activate
-            pytest --junitxml=test-reports/results.xml
+            python manage.py test invoices
       - store_artifacts:
           path: test-reports
           destination: test-reports
